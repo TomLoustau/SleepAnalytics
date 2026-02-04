@@ -1,35 +1,36 @@
 import SwiftUI
+import Foundation
 
 struct ContentView: View {
-    @StateObject var motionManager = MotionManager()
+    @StateObject var manager: ManagerManager = ManagerManager()
     var body: some View {
-        VStack(spacing: 20){
-            //Text("x : \(motionManager.x)")
-            //Text("y : \(motionManager.y)")
-            //Text("z : \(motionManager.z)")
-            Text("amplitude \n \(motionManager.amplitude)")
-                .padding()
-                .background(Color.black)
-                .cornerRadius(50)
-                .foregroundColor(Color.orange)
-            
-            Button(action: { motionManager.accelerometerData() }){
-                    Text("lancer l'accéleromètre")
-                    .padding()
-                    .background(Color.orange)
-                    .cornerRadius(10)
-                    .foregroundColor(Color.white)
-            }
-            
-            Button(action: { motionManager.stopAccelerometer() }){
-                Text("stopper l'accéleromètre")
-                    .padding()
-                    .background(Color.gray)
-                    .cornerRadius(10)
-                    .foregroundColor(Color.white)
+        NavigationStack{
+            ZStack {
+                        // Définir la couleur d'arrière-plan
+                        Color.gray // Couleur unie
+                            .ignoresSafeArea() // Étend la couleur sur toute la vue (même sous la barre de statut)
+                    
+                VStack(spacing: 20){
+                    Text("amplitude \n \(manager.getAmplitude())\n \(String(describing: manager.getNoise())) db")
+                        .padding()
+                        .background(Color.black)
+                        .cornerRadius(50)
+                        .foregroundColor(Color.orange)
+                    
+                    
+                    Button(action: { manager.startSession() }){
+                        Text(manager.textRecordButton)
+                            .padding()
+                            .background(manager.colorButton)
+                            .cornerRadius(10)
+                            .foregroundColor(Color.white)
+                    }
+                
+                }
             }
         }
     }
+        
 }
 
 struct ContentView_Previews: PreviewProvider {

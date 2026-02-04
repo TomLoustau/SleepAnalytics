@@ -30,7 +30,7 @@ class EnregistrementTable {
     }
     
     
-    func insert(motionModel: MotionModel) -> Int64 {
+    func insert() -> Int64 {
         do{
             let insert = tableEnregistrement.insert(
                 self.enregistrementDate <- Date())
