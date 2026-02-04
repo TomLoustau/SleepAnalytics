@@ -25,9 +25,7 @@ class NoiseTable {
     init(db: Connection){
         self.db = db
         
-        try! self.db.run(tableNoise.drop())
-        
-        let createQuery = tableNoise.create(){ table in
+        let createQuery = tableNoise.create(ifNotExists: true){ table in
             table.column(noiseId, primaryKey: PrimaryKey.autoincrement)
             table.column(self.meanNoise, defaultValue: 0.0)
             table.column(maxNoise, defaultValue: 0.0)
