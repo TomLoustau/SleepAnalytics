@@ -13,6 +13,7 @@ import SwiftUI
 class NoiseManager: NSObject, ObservableObject{
     private let bd: Bd = Bd.shared
     private let noiseTable: NoiseTable
+    private let session: AVAudioSession = AVAudioSession.sharedInstance()
     private var noiseMeasures: [NoiseModel] = []
     private var noiseMeasure: NoiseModel?
     private var enregistrementTable: EnregistrementTable
@@ -46,40 +47,47 @@ class NoiseManager: NSObject, ObservableObject{
     func setupRecorder(){
         
         // Configuration
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playAndRecord, mode: .measurement, options: .duckOthers)
-        try? session.setActive(true)
+        try? self.session.setCategory(.playAndRecord, mode: .measurement, options: [.mixWithOthers, .defaultToSpeaker])
+        try? self.session.setActive(true)
         
     }
     
     func recording(idEnregistrement: Int64) -> Void {
         if self.isRecording == false {
+            try? self.session.setActive(true)
             self.recorder?.isMeteringEnabled = true
             self.recorder?.record()
             self.isRecording = true
             self.noiseData(idEnregistrement: idEnregistrement)
         }
         else {
-                self.stopRecorder()
-                self.isRecording = false
-            }
+            self.recorder?.isMeteringEnabled = false
+            self.isRecording = false
+            self.recorder?.stop()
+            try? self.session.setActive(false)
+            print("Stop recording")
+        }
     }
     
-    func stopRecorder() -> Void {
-        self.recorder?.stop()
-    }
     
     func noiseData(idEnregistrement: Int64) -> Void {
-        let minDb: Float = -60.0
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
-            self.recorder?.updateMeters()
-            
-            let db: Float = self.recorder?.averagePower(forChannel: 0) ?? 0.0
-            
-            self.noiseMeanMeasure = (db - minDb) * 10
-            
-            self.noiseMeasure = NoiseModel(id: nil, meanNoise: self.noiseMeanMeasure, maxNoise: 0.0, varianceNoise: 0.0, peaksNoise: 0.0, idEnregistrement: idEnregistrement)
-            self.saveNoiseData(of: self.noiseMeasure!, idEnregistrement: idEnregistrement)
+        let minDb: Float = -80.0
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+            if self.isRecording {
+                self.recorder?.updateMeters()
+                
+                let db: Float = self.recorder?.averagePower(forChannel: 0) ?? 0.0
+                
+                self.noiseMeanMeasure = (db - minDb) * 10
+                
+                if self.noiseMeanMeasure <= 0 { self.noiseMeanMeasure = 0.1 }
+                
+                self.noiseMeasure = NoiseModel(id: nil, meanNoise: self.noiseMeanMeasure, maxNoise: 0.0, varianceNoise: 0.0, peaksNoise: 0.0, date: Date(), idEnregistrement: idEnregistrement)
+                self.saveNoiseData(of: self.noiseMeasure!, idEnregistrement: idEnregistrement)
+            }
+            else {
+                timer.invalidate()
+            }
         }
     }
     
@@ -110,7 +118,7 @@ class NoiseManager: NSObject, ObservableObject{
         let meanNoise: Float = self.mean(of: noises)
         let maxNoise: Float = noises.max() ?? 0.0
         let varianceNoise: Float = self.variance(of: noises) ?? 0.0
-        return NoiseModel(id: nil, meanNoise: meanNoise, maxNoise: maxNoise, varianceNoise: varianceNoise, peaksNoise: nil, idEnregistrement: idEnregistrement)
+        return NoiseModel(id: nil, meanNoise: meanNoise, maxNoise: maxNoise, varianceNoise: varianceNoise, peaksNoise: nil, date: Date(), idEnregistrement: idEnregistrement)
     }
     
     
@@ -136,6 +144,33 @@ class NoiseManager: NSObject, ObservableObject{
         let cleanNoiseMeasures = self.cleanNoiseMeasures(noiseMeasures: noises, idEnregistrement: idEnregistrement)
         for measure in cleanNoiseMeasures {
             var _ = self.noiseTable.insert(noiseModel: measure)
+        }
+    }
+    
+    func getNoiseDataById(idEnregistrement: Int) -> [NoiseModel] {
+        let noises = self.noiseTable.selectByEnregistrement(idEnregistrement: idEnregistrement)
+        return flatData(noises: noises, intensite: 10)
+    }
+    
+    func flatData(noises: [NoiseModel], intensite: Int) -> [NoiseModel] {
+        return stride(from: intensite, to: noises.count, by: intensite).map { i in
+            let plage = noises[(i-intensite)..<i]
+            
+            let moyenneMean = plage.map { $0.meanNoise }.reduce(0, +) / Float(intensite)
+            let moyenneMax = plage.map { $0.maxNoise }.reduce(0, +) / Float(intensite)
+            let moyenneVariance = plage.map { $0.varianceNoise }.reduce(0, +) / Float(intensite)
+            let date = noises[i - (intensite/2)].date
+            let idEnregistrement = 0
+            
+            return NoiseModel(
+                id: nil,
+                meanNoise: moyenneMean,
+                maxNoise: moyenneMax,
+                varianceNoise: moyenneVariance,
+                peaksNoise: nil,
+                date: date,
+                idEnregistrement: Int64(idEnregistrement)
+            )
         }
     }
 }

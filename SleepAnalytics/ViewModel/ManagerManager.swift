@@ -14,10 +14,16 @@ class ManagerManager: ObservableObject {
     @Published var motionManager: MotionManager = MotionManager()
     @Published var noiseManager: NoiseManager = NoiseManager()
     @Published var textRecordButton: String = "Lancer l'enregistrement"
-    @Published var colorButton: Color = Color.green
+    @Published var colorButton: Color = Color.indigo
     private let bd: Bd = Bd.shared
     private let enregistrementTable : EnregistrementTable
     private var idEnregistrement: Int64 = 0
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.dateStyle = .long
+        return formatter
+    }()
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -38,18 +44,18 @@ class ManagerManager: ObservableObject {
     }
     
     func startSession() -> Void {
-        if self.colorButton == Color.green {
-            self.colorButton = Color.red
+        if self.colorButton == Color.indigo {
+            self.colorButton = Color.purple
             self.textRecordButton = "Stopper l'enregistrement"
             self.idEnregistrement = self.enregistrementTable.insert()
             self.motionManager.accelerometerData(idEnregistrement: self.idEnregistrement)
             self.noiseManager.recording(idEnregistrement: self.idEnregistrement)
         }
         else{
-            self.colorButton = Color.green
+            self.colorButton = Color.indigo
             self.textRecordButton = "Lancer l'enregistrement"
             self.motionManager.stopAccelerometer()
-            self.noiseManager.recorder?.stop()
+            self.noiseManager.recording(idEnregistrement: self.idEnregistrement)
         }
     }
     
@@ -59,6 +65,10 @@ class ManagerManager: ObservableObject {
     
     func getNoise() -> Float {
         return self.noiseManager.noiseMeanMeasure
+    }
+    
+    func format(date: Date) -> String {
+        return dateFormatter.string(from: date)
     }
     
 }

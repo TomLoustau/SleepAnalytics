@@ -10,6 +10,7 @@ import SQLite
 
 class AccelerometerDataTable {
     
+    
     static let shared = AccelerometerDataTable(db: Bd.shared.getDb())
     
     private var db : Connection
@@ -19,7 +20,9 @@ class AccelerometerDataTable {
     private let accelerometerAmplitude = Expression<Double>("meanAmplitude")
     private let maxAmplitude = Expression<Double>("maxAmplitude")
     private let varianceAmplitude = Expression<Double>("varianceAmplitude")
+    private let date = Expression<Date>("date")
     private let idEnregistrement = Expression<Int64>("idEnregistrement")
+    private let dateEnregistrement = Expression<Date>("dateEnr")
     private let enregistrement = Table("Enregistrement")
     
     init(db: Connection){
@@ -30,6 +33,7 @@ class AccelerometerDataTable {
             table.column(accelerometerAmplitude, defaultValue: 0)
             table.column(maxAmplitude, defaultValue: 0)
             table.column(varianceAmplitude, defaultValue: 0)
+            table.column(date, defaultValue: nil)
             table.column(idEnregistrement)
             table.foreignKey(idEnregistrement, references: enregistrement, idEnregistrement, delete: .cascade)
         }
@@ -44,6 +48,7 @@ class AccelerometerDataTable {
                 self.accelerometerAmplitude <- motionModel.meanAmplitude,
                 self.maxAmplitude <- motionModel.maxAmplitude,
                 self.varianceAmplitude <- motionModel.varianceAmplitude,
+                self.date <- Date(),
                 self.idEnregistrement <- motionModel.idEnregistrement!)
             let accelerometerId = try self.db.run(insert)
             print("insert dans la table accelerometre done ✅")
@@ -86,5 +91,45 @@ class AccelerometerDataTable {
             print(error)
         }
         return id
+    }
+    
+    func selectAllEnregistrement() -> [EnregistrementModel] {
+        var enregistrements: [EnregistrementModel] = []
+        
+        let colIdEnregistrement = Expression<Int64>("id")
+        let colDateEnregistrement = Expression<Date>("dateEnregistrement")
+        
+        let query = tableAccelerometerData.join(enregistrement, on: idEnregistrement == enregistrement[colIdEnregistrement])
+                                          .select(distinct: enregistrement[colIdEnregistrement], enregistrement[colDateEnregistrement])
+        
+        do{
+            for row in try db.prepare(query){
+                let model = EnregistrementModel(id: Int(row[colIdEnregistrement]),
+                                                date: row[colDateEnregistrement])
+                enregistrements.append(model)
+            }
+        }catch {
+            print("Erreur lors du select \(error)")
+        }
+        return enregistrements
+    }
+    
+    func selectByEnregistrement(idEnregistrement: Int) -> [MotionModel] {
+        var result: [MotionModel] = []
+        let query = self.tableAccelerometerData.filter(self.idEnregistrement == Int64(idEnregistrement))
+        do {
+            for row in try db.prepare(query) {
+                let model = MotionModel(id: row[self.accelerometerId],
+                                        meanAmplitude: row[self.accelerometerAmplitude],
+                                        maxAmplitude: row[self.maxAmplitude],
+                                        varianceAmplitude: row[self.varianceAmplitude],
+                                        date: row[self.date],
+                                        idEnregistrement: row[self.idEnregistrement])
+                result.append(model)
+            }
+        } catch {
+            print("erreur lors du select \(error)")
+        }
+        return result
     }
 }

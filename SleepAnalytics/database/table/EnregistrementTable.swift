@@ -35,7 +35,6 @@ class EnregistrementTable {
             let insert = tableEnregistrement.insert(
                 self.enregistrementDate <- Date())
             let enregistrementId = try self.db.run(insert)
-            print("insert dans la table enregistrement done ✅")
             return enregistrementId
         }catch{
             print(error)
@@ -56,5 +55,38 @@ class EnregistrementTable {
             print(error)
         }
         return 0
+    }
+    
+    func selectAll() -> [EnregistrementModel] {
+        var enregistrements: [EnregistrementModel] = []
+        
+        let table = self.tableEnregistrement
+        do{
+            for row in try db.prepare(table){
+                let model = EnregistrementModel(id: Int(row[enregistrementId]),
+                                                date: row[enregistrementDate])
+                enregistrements.append(model)
+            }
+        }catch {
+            print("Erreur lors du select \(error)")
+        }
+        
+        return enregistrements
+    }
+    
+    func selectId() -> [Int] {
+        var ids: [Int] = []
+        
+        let table = self.tableEnregistrement
+        do{
+            for row in try db.prepare(table){
+                let id = Int(row[enregistrementId])
+                ids.append(id)
+            }
+        }catch {
+            print("Erreur lors du select \(error)")
+        }
+        
+        return ids
     }
 }

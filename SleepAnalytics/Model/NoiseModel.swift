@@ -13,5 +13,6 @@ struct NoiseModel {
     let maxNoise: Float
     let varianceNoise: Float
     let peaksNoise: Float?
+    let date: Date
     let idEnregistrement: Int64
 }

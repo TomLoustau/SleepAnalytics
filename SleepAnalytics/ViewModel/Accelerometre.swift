@@ -101,11 +101,76 @@ class MotionManager: ObservableObject{
         return newMotionMeasures
     }
     
+    func flatData(id: Int, intensite: Int) -> [MotionModel] {
+        let data = self.getAccelerometerDataById(id: id).sorted(by: { $0.date < $1.date })
+        if data.count < intensite { return data }
+        
+        return stride(from: intensite, to: data.count, by: intensite).map { i in
+            let plage = data[(i-intensite)..<i]
+            
+            let moyenneMean = plage.map { $0.meanAmplitude }.reduce(0, +) / Double(intensite)
+            let moyenneMax = plage.map { $0.maxAmplitude }.reduce(0, +) / Double(intensite)
+            let moyenneVariance = plage.map { $0.varianceAmplitude }.reduce(0, +) / Double(intensite)
+            
+            // On prend la date du milieu de la plage pour être précis temporellement
+            let date = data[i - (intensite/2)].date
+            
+//            return getClassification(measure: MotionModel(
+//                id: nil,
+//                meanAmplitude: moyenneMean,
+//                maxAmplitude: moyenneMax,
+//                varianceAmplitude: moyenneVariance,
+//                date: date,
+//                idEnregistrement: nil
+//            ))
+            return MotionModel(
+                id: nil,
+                meanAmplitude: moyenneMean,
+                maxAmplitude: moyenneMax,
+                varianceAmplitude: moyenneVariance,
+                date: date,
+                idEnregistrement: nil
+            )
+        }
+    }
+    
+    func classificationSommeil(measures: [MotionModel]) -> [MotionModel] {
+        return measures.map{ measure in
+            self.getClassification(measure: measure)
+        }
+    }
+    
+    func getClassification(measure: MotionModel) -> MotionModel {
+        switch measure.maxAmplitude {
+        case 0..<2: return MotionModel(id: measure.id, meanAmplitude: measure.meanAmplitude, maxAmplitude: 10, varianceAmplitude: measure.varianceAmplitude, date: measure.date, idEnregistrement: measure.idEnregistrement)
+        case 2..<10: return MotionModel(id: measure.id, meanAmplitude: measure.meanAmplitude, maxAmplitude: 20, varianceAmplitude: measure.varianceAmplitude, date: measure.date, idEnregistrement: measure.idEnregistrement)
+        case 10..<25: return MotionModel(id: measure.id, meanAmplitude: measure.meanAmplitude, maxAmplitude: 30, varianceAmplitude: measure.varianceAmplitude, date: measure.date, idEnregistrement: measure.idEnregistrement)
+        default: return MotionModel(id: measure.id, meanAmplitude: measure.meanAmplitude, maxAmplitude: 40, varianceAmplitude: measure.varianceAmplitude, date: measure.date, idEnregistrement: measure.idEnregistrement)
+        }
+    }
+    
+    func getBeginSleepTime(measures: [MotionModel]) -> Date {
+        if let debutSommeil = measures.first(where: { $0.maxAmplitude < 10 }) {
+            return debutSommeil.date
+        }
+        return Date()
+    }
+    
+    func getSleepDuration(measures: [MotionModel]) -> Double {
+        let debutNuit = self.getBeginSleepTime(measures: measures)
+        let finNuit = measures[measures.count].date
+        return finNuit.timeIntervalSince(debutNuit) / 3600
+    }
+    
     func insertMeasuresDb(motionMeasures: [MotionModel], idEnregistrement: Int64){
         let meanMotionMeasures = self.meanMeasure(motionMeasures: motionMeasures, idEnregistrement: idEnregistrement)
         for measure in meanMotionMeasures{
             self.id = self.accelerometerTable.insert(motionModel: measure)
         }
+    }
+    
+    func getAccelerometerDataById(id: Int) -> [MotionModel]{
+        return accelerometerTable.selectByEnregistrement(idEnregistrement: id)
     }
 }
 
