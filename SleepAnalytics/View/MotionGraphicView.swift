@@ -15,6 +15,9 @@ struct MotionGraphicView: View {
     @State var selectedValue: Date?
     var graphicH: CGFloat = 300
     var graphicW: CGFloat = 300
+    var yMin: Double? {
+        accelerometerData.min(by: {$0.maxAmplitude < $1.maxAmplitude})?.maxAmplitude
+    }
     var yMax: Double? {
         accelerometerData.max(by: { $0.maxAmplitude < $1.maxAmplitude })?.maxAmplitude
     }
@@ -24,7 +27,7 @@ struct MotionGraphicView: View {
                 .ignoresSafeArea()
             VStack {
                 
-                Text("Graphique des mouvement")
+                Text("Graphique des mouvements")
                     .font(.headline)
                     .foregroundColor(Color.yellow)
                 
@@ -59,7 +62,7 @@ struct MotionGraphicView: View {
                         }
                     }
                     .chartYAxis {
-                        AxisMarks(values: Array(stride(from: 0, through: yMax!, by: yMax! / 2))) {value in
+                        AxisMarks(values: Array(stride(from: 0, through: yMax!, by: 1))) {value in
                             AxisGridLine()
                             AxisTick()
                             AxisValueLabel{
@@ -70,7 +73,7 @@ struct MotionGraphicView: View {
                             }
                         }
                     }
-                    .chartYScale(domain: 0...yMax!)
+                    .chartYScale(domain: yMin! - 1...yMax! + 1)
                     .chartXVisibleDomain(length: 25000)
                     //.chartXSelection($selectedValue)
                     .chartScrollableAxes(.horizontal)

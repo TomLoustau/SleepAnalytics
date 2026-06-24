@@ -23,6 +23,7 @@ class MotionManager: ObservableObject{
     @Published var amplitude: Double = 0.0
     @Published var varianceAmplitude: Double = 0.0
     @Published var maxAmplitude: Double = 0.0
+    @Published var firstMeasureIndex: Int = 0
     
     init(){
         self.motionMeasure = MotionModel(id: 0, meanAmplitude: 0.0, maxAmplitude: 0.0, varianceAmplitude: 0.0, date: Date(), idEnregistrement: 0)
@@ -102,7 +103,11 @@ class MotionManager: ObservableObject{
     }
     
     func flatData(id: Int, intensite: Int) -> [MotionModel] {
-        let data = self.getAccelerometerDataById(id: id).sorted(by: { $0.date < $1.date })
+        var data = self.getAccelerometerDataById(id: id).sorted(by: { $0.date < $1.date })
+        
+        self.firstMeasureIndex = getFirstIndex(data: data)
+        data = Array(data[self.firstMeasureIndex...])
+            
         if data.count < intensite { return data }
         
         return stride(from: intensite, to: data.count, by: intensite).map { i in
@@ -132,6 +137,16 @@ class MotionManager: ObservableObject{
                 idEnregistrement: nil
             )
         }
+    }
+    
+    func getFirstIndex(data: [MotionModel]) -> Int {
+        let seuil: Double = 2
+        for i in 0..<data.count - 1 {
+            if data[i].maxAmplitude < seuil && data[i+1].maxAmplitude < seuil {
+                return i
+            }
+        }
+        return 0
     }
     
     func classificationSommeil(measures: [MotionModel]) -> [MotionModel] {

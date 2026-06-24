@@ -17,6 +17,7 @@ struct AnalyseView: View {
     @State var accelerometerData: [MotionModel]?
     @State var noiseData: [NoiseModel]?
     @State var sleepBegin: Date?
+    let flatIntensity: Int = 100
     
     
     var body: some View {
@@ -35,7 +36,7 @@ struct AnalyseView: View {
     
     private var graphicButtons: some View {
         HStack {
-            Button(action: { accelerometerData = manager.motionManager.flatData(id: selectionValue!.id, intensite: 10)
+            Button(action: { accelerometerData = manager.motionManager.flatData(id: selectionValue!.id, intensite: flatIntensity)
                 versMouvement = true }) {
                     VStack(spacing: 0){
                         Image("graphique")

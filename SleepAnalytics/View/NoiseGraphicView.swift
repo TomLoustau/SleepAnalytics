@@ -23,7 +23,7 @@ struct NoiseGraphicView: View {
                 .ignoresSafeArea()
             VStack {
                 
-                Text("Graphique des mouvement")
+                Text("Graphique des déibels")
                     .font(.headline)
                     .foregroundColor(Color.yellow)
                 
