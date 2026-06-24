@@ -15,7 +15,9 @@ struct MotionGraphicView: View {
     @State var selectedValue: Date?
     var graphicH: CGFloat = 300
     var graphicW: CGFloat = 300
-    var yMax: Int = 50
+    var yMax: Double? {
+        accelerometerData.max(by: { $0.maxAmplitude < $1.maxAmplitude })?.maxAmplitude
+    }
     var body: some View {
         ZStack {
             Color(red: 0.05, green: 0.05, blue: 0.05)
@@ -32,15 +34,6 @@ struct MotionGraphicView: View {
                 else {
                     
                     Chart(accelerometerData, id: \.id){ measure in
-//                        LineMark(
-//                            x: .value("Heure", measure.date),
-//                            y: .value("Moyenne", measure.meanAmplitude),
-//                            series: .value("Type", "Moyenne")
-//                        )
-//                        
-//                        .interpolationMethod(.cardinal)
-//                        .foregroundStyle(Color.yellow.gradient)
-                        
                         LineMark(
                             x: .value("Heure", measure.date),
                             y: .value("Max", measure.maxAmplitude),
@@ -48,14 +41,6 @@ struct MotionGraphicView: View {
                         )
                         .interpolationMethod(.cardinal)
                         .foregroundStyle(Color.yellow)
-                        
-//                        LineMark(
-//                            x: .value("Heure", measure.date),
-//                            y: .value("Variance", measure.varianceAmplitude),
-//                            series: .value("Type", "Variance")
-//                        )
-//                        .interpolationMethod(.cardinal)
-//                        .foregroundStyle(Color.green.gradient)
                     }
                     .frame(height: graphicH)
                     .frame(width: graphicW)
@@ -74,7 +59,7 @@ struct MotionGraphicView: View {
                         }
                     }
                     .chartYAxis {
-                        AxisMarks(values: Array(stride(from: 0, through: yMax, by: yMax / 2))) {value in
+                        AxisMarks(values: Array(stride(from: 0, through: yMax!, by: yMax! / 2))) {value in
                             AxisGridLine()
                             AxisTick()
                             AxisValueLabel{
@@ -85,7 +70,7 @@ struct MotionGraphicView: View {
                             }
                         }
                     }
-                    .chartYScale(domain: 0...yMax)
+                    .chartYScale(domain: 0...yMax!)
                     .chartXVisibleDomain(length: 25000)
                     //.chartXSelection($selectedValue)
                     .chartScrollableAxes(.horizontal)
@@ -104,6 +89,7 @@ struct MotionGraphicView: View {
 //                    .padding()
 //                    Text(zoomLevel, format: .number.precision(.fractionLength(0)))
 //                        .foregroundColor(Color.yellow)
+                    
                 }
             }
         }

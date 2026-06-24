@@ -159,7 +159,7 @@ class MotionManager: ObservableObject{
     func getSleepDuration(measures: [MotionModel]) -> Double {
         let debutNuit = self.getBeginSleepTime(measures: measures)
         let finNuit = measures[measures.count].date
-        return finNuit.timeIntervalSince(debutNuit) / 3600
+        return finNuit.timeIntervalSince(debutNuit)
     }
     
     func insertMeasuresDb(motionMeasures: [MotionModel], idEnregistrement: Int64){

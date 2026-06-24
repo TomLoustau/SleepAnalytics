@@ -57,7 +57,7 @@ struct NoiseGraphicView: View {
                         }
                     }
                     .chartYAxis {
-                        AxisMarks(values: Array(stride(from: 0, through: yMax ?? 0, by: yMax ?? 0 / 5))) {value in
+                        AxisMarks(values: Array(stride(from: 0, through: yMax!, by: yMax! / 5))) {value in
                             AxisGridLine()
                             AxisTick()
                             AxisValueLabel{
