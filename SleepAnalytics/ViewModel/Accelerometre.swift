@@ -165,16 +165,18 @@ class MotionManager: ObservableObject{
     }
     
     func getBeginSleepTime(measures: [MotionModel]) -> Date {
-        if let debutSommeil = measures.first(where: { $0.maxAmplitude < 10 }) {
-            return debutSommeil.date
-        }
-        return Date()
+        let firstSleepIndex: Int = getFirstIndex(data: measures)
+        return measures[firstSleepIndex].date
     }
     
-    func getSleepDuration(measures: [MotionModel]) -> Double {
-        let debutNuit = self.getBeginSleepTime(measures: measures)
-        let finNuit = measures[measures.count].date
-        return finNuit.timeIntervalSince(debutNuit)
+    func getSleepDuration(measures: [MotionModel]) -> DateComponents {
+        let calendar = Calendar.current
+        let firstIndex = getFirstIndex(data: measures)
+        let nightBegin = self.getBeginSleepTime(measures: measures)
+        let nightEnd = measures[measures.count - firstIndex - 1].date
+        
+        
+        return calendar.dateComponents([.hour, .minute], from: nightBegin, to: nightEnd)
     }
     
     func insertMeasuresDb(motionMeasures: [MotionModel], idEnregistrement: Int64){

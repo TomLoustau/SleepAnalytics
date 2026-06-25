@@ -47,7 +47,7 @@ class NoiseManager: NSObject, ObservableObject{
     func setupRecorder(){
         
         // Configuration
-        try? self.session.setCategory(.playAndRecord, mode: .measurement, options: [.mixWithOthers, .defaultToSpeaker])
+        try? self.session.setCategory(.playAndRecord, mode: .default, options: [.mixWithOthers, .defaultToSpeaker])
         try? self.session.setActive(true)
         
     }

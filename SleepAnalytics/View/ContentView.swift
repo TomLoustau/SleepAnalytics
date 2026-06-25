@@ -23,13 +23,7 @@ struct ContentView: View {
                     if !enregistrementManager.enregistrements.isEmpty {
                         datePicker
                     }
-                    
-//                    Text("amplitude \n \(manager.getAmplitude())\n \(String(describing: manager.getNoise())) db")
-//                        .padding()
-//                        .background(Color.gray)
-//                        .cornerRadius(30)
-//                        .foregroundColor(Color.white)
-//                        .glassEffect(in: .rect(cornerRadius: 30))
+            
                     analyseBtn
                     recordButton
                 }
@@ -44,7 +38,7 @@ struct ContentView: View {
                 Text(textAnalyseBtn)
         }
             .navigationDestination(isPresented: $versAnalyse){
-                AnalyseView(selectionValue: selectionValue)
+                AnalyseView(selectionValue: selectionValue, accelerometerData: accelerometerData ?? [])
             }
             .padding()
             .glassEffect()
@@ -64,9 +58,6 @@ struct ContentView: View {
             .pickerStyle(.wheel)
             .onAppear {
                 selectionValue = enregistrementManager.enregistrements.first
-            }
-            .onChange(of: selectionValue){
-                accelerometerData = manager.motionManager.flatData(id: selectionValue!.id, intensite: 10)
             }
         }
     

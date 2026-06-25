@@ -14,7 +14,7 @@ struct AnalyseView: View {
     @StateObject var manager: ManagerManager = ManagerManager()
     @StateObject var enregistrementManager = EnregistrementManager()
     @State var selectionValue: EnregistrementModel?
-    @State var accelerometerData: [MotionModel]?
+    @State var accelerometerData: [MotionModel]
     @State var noiseData: [NoiseModel]?
     @State var sleepBegin: Date?
     let flatIntensity: Int = 100
@@ -22,10 +22,15 @@ struct AnalyseView: View {
     
     var body: some View {
         ZStack {
+            let sleepTime: DateComponents = manager.motionManager.getSleepDuration(measures: accelerometerData)
+            
             Color(red: 0.05, green: 0.05, blue: 0.05)
                 .ignoresSafeArea()
             
             VStack(spacing: 20){
+                Text("\(sleepTime.hour ?? 0)h \(sleepTime.minute ?? 0)min de sommeil")
+                    .foregroundColor(Color.yellow)
+                
                 Text("Analyse de votre nuit")
                     .foregroundColor(Color.yellow)
                 
@@ -34,6 +39,7 @@ struct AnalyseView: View {
         }
     }
     
+
     private var graphicButtons: some View {
         HStack {
             Button(action: { accelerometerData = manager.motionManager.flatData(id: selectionValue!.id, intensite: flatIntensity)
@@ -54,12 +60,12 @@ struct AnalyseView: View {
                    backgroundCard(width: 170)
                 )
                 .navigationDestination(isPresented: $versMouvement){
-                    MotionGraphicView(accelerometerData: accelerometerData ?? [], selectedValue: selectionValue?.date)
+                    MotionGraphicView(accelerometerData: accelerometerData, selectedValue: selectionValue?.date)
                 }
                 
             
             
-            Button(action: { noiseData = manager.noiseManager.getNoiseDataById(idEnregistrement: selectionValue!.id)
+            Button(action: { noiseData = manager.noiseManager.flatData(noises: noiseData ?? [], intensite: flatIntensity)
                 versDecibel = true }) {
                     VStack(spacing: 0){
                         Image("graphique")
@@ -98,5 +104,4 @@ struct AnalyseView: View {
 }
 
 #Preview {
-    AnalyseView()
 }

@@ -35,7 +35,6 @@ struct MotionGraphicView: View {
                     ContentUnavailableView("Aucune donnée", systemImage: "chart.bar.fill")
                 }
                 else {
-                    
                     Chart(accelerometerData, id: \.id){ measure in
                         LineMark(
                             x: .value("Heure", measure.date),
